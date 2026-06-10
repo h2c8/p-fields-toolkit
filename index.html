@@ -488,7 +488,7 @@
         function initAudioEngine() {
             if (ctx) return; ctx = new AudioContext();
             masterCompressor = ctx.createDynamicsCompressor(); masterCompressor.threshold.value = -3.0; masterCompressor.knee.value = 12.0; masterCompressor.ratio.value = 15.0; masterCompressor.attack.value = 0.002; masterCompressor.release.value = 0.1;
-            analyser = ctx.createAnalyser(); analyser.fftSize = 2048; bufferLength = analyser.frequencyBinCount; dataArray = new Uint8Array(bufferLength);
+            analyser = ctx.createAnalyser(); analyser.fftSize = 512; bufferLength = analyser.frequencyBinCount; dataArray = new Uint8Array(bufferLength);
             masterGain = ctx.createGain(); masterGain.gain.value = parseFloat(document.getElementById('masterVol').value) || 0.8; 
             masterGain.connect(masterCompressor); masterCompressor.connect(analyser); analyser.connect(ctx.destination);
             initVisualizer(); 
@@ -538,7 +538,7 @@
         function stopAudioEngine() { clearTimeout(timerID); }
 
         function scheduler() {
-            while (nextNoteTime < ctx.currentTime + 0.1) {
+            while (nextNoteTime < ctx.currentTime + 0.25) {
                 const stepToPlay = currentStep; const timeToPlay = nextNoteTime;
                 if (autoBreakMode && !liveBreakActive) {
                     const posInBar = stepToPlay % 16; const isMacroPage = (stepToPlay === 48); 
