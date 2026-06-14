@@ -3,35 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gen_Audio | Installation Player (No-Scroll)</title>
+    <title>Gen_Audio | OMR Hardware Node</title>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
         /* ==========================================
-           GEOMETRIA PURA - SINGLE SCREEN UI
+           INDUSTRIAL DOT-GRID UI - V2.2
            ========================================== */
         
         :root {
-            --bg: #ffffff;
+            --bg: #f8f8f8;
+            --grid: #d8d8d8;
             --fg: #000000;
-            --faded: #888888;
+            --lead: #666666; /* Grigio Piombo scuro per alto contrasto */
+            
+            /* Colori LED Hardware */
+            --led-red: #ff3333;
+            --led-orange: #ffaa00;
+            --led-green: #00cc33;
         }
 
-        /* BLOCCO SCROLL GLOBALE */
+        /* BLOCCO SCROLL E SFONDO MILLIMETRATO */
         body, html { 
-            background: var(--bg); 
+            background-color: var(--bg); 
+            /* Texture a punti (Dot-Grid) */
+            background-image: radial-gradient(var(--grid) 1px, transparent 1px);
+            background-size: 20px 20px;
+            
             color: var(--fg); 
             font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif; 
-            font-size: 12px; 
-            letter-spacing: -0.2px;
             margin: 0; 
             padding: 0;
             width: 100vw;
-            height: 100dvh; /* Altezza fissa esatta per mobile */
+            height: 100dvh; 
             box-sizing: border-box;
-            overflow: hidden; /* NIENTE SCROLL */
+            overflow: hidden; 
             user-select: none;
             -webkit-tap-highlight-color: transparent;
-            text-transform: lowercase;
         }
 
         /* BLOCCO DESKTOP */
@@ -48,182 +55,176 @@
         body.is-desktop #desktop-block { display: flex; }
         body.is-desktop .app-wrapper { display: none !important; }
 
-        /* GRID/FLEX WRAPPER PRINCIPALE (FULL SCREEN RIGIDO) */
+        /* GRID/FLEX WRAPPER (GABBIA CENTRATA CON MARGINI AMPI) */
         .app-wrapper {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             height: 100%;
-            padding: 25px 20px;
+            max-width: 450px; /* Non si allarga troppo su tablet piccoli */
+            margin: 0 auto;
+            padding: 35px 25px; /* Framing aumentato */
             box-sizing: border-box;
             overflow: hidden;
         }
 
         /* ANGOLI (HEADER E FOOTER) */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
+        header { display: flex; justify-content: space-between; align-items: flex-start; }
+        footer { display: flex; justify-content: space-between; align-items: flex-end; }
 
-        footer {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
-        .info-block {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+        .info-block { display: flex; flex-direction: column; gap: 8px; }
         .text-right { text-align: right; align-items: flex-end; }
+
+        /* TIPOGRAFIA INDUSTRIALE A DUE LIVELLI */
+        .sys-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            color: var(--lead);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sys-value {
+            font-size: 12px;
+            text-transform: lowercase;
+            font-weight: 400;
+            color: var(--fg);
+        }
+
+        /* HARDWARE LED STATUS */
+        .led {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            box-shadow: 0 0 6px currentColor;
+        }
+        .led-red { color: var(--led-red); background-color: var(--led-red); }
+        .led-orange { 
+            color: var(--led-orange); background-color: var(--led-orange); 
+            animation: blinkFast 0.5s infinite; 
+        }
+        .led-green { color: var(--led-green); background-color: var(--led-green); }
+        .led-pulse { animation: blinkSlow 1.5s infinite ease-in-out; }
+
+        @keyframes blinkFast { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+        @keyframes blinkSlow { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
         /* PULSANTI TESTUALI E LOGICA */
         button.text-btn, button.status-btn, button.nav-btn {
             background: transparent;
             border: none;
-            color: var(--faded);
+            color: var(--fg);
             font-family: inherit;
             font-size: 12px;
             cursor: pointer;
             padding: 0; margin: 0;
             text-transform: lowercase;
-            transition: color 0.2s;
+            transition: opacity 0.2s;
         }
-        button.text-btn { border-bottom: 1px solid var(--faded); color: var(--fg); padding-bottom: 2px; }
-        button.text-btn:hover { border-bottom-color: var(--fg); font-weight: bold; }
-        
+        button.text-btn { border-bottom: 1px solid var(--fg); padding-bottom: 1px; font-weight: 600; }
+        button.status-btn { color: var(--lead); }
         button.status-btn.is-active { color: var(--fg); font-weight: bold; }
-        button.nav-btn:hover, button.nav-btn:active { color: var(--fg); font-weight: bold; }
+        button.nav-btn { font-size: 14px; padding: 10px; color: var(--lead); }
+        button.nav-btn:active { color: var(--fg); font-weight: bold; }
 
-        /* VOLUME */
-        .vol-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 4px;
-        }
+        /* VOLUME SLIDER ASSOTTIGLIATO */
+        .vol-container { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
         input[type="range"] {
             -webkit-appearance: none;
-            width: 80px; height: 1px; 
-            background: var(--faded); outline: none; margin: 0;
+            width: 70px; height: 1px; 
+            background: var(--lead); outline: none; margin: 0;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none; 
-            width: 2px; height: 12px; 
+            width: 2px; height: 8px; /* Tacca più piccola ed elegante */
             background: var(--fg); cursor: pointer;
         }
 
         /* ZONA CENTRALE: OSCILLOSCOPIO & PLAY BUTTON */
         main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            position: relative;
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            width: 100%; position: relative;
         }
 
+        /* OSCILLOSCOPIO CONFINATO */
         #waveformCanvas {
             width: 100%;
-            height: 100px;
+            max-width: 240px; /* Non va più da bordo a bordo */
+            height: 70px;
             margin-bottom: 40px;
         }
 
         /* PULSANTE CENTRALE UNICO */
         #btnToggle {
-            appearance: none;
-            outline: none;
-            width: 70px; 
-            height: 70px;
-            border: 4px solid var(--fg); 
-            border-radius: 50%; 
-            background: transparent;
-            cursor: pointer;
-            position: relative;
-            display: block;
+            appearance: none; outline: none;
+            width: 65px; height: 65px;
+            border: 4px solid var(--fg); border-radius: 50%; 
+            background: transparent; cursor: pointer;
+            position: relative; display: block;
             transition: transform 0.1s ease;
             -webkit-tap-highlight-color: transparent;
         }
-        #btnToggle:active { transform: scale(0.95); }
+        #btnToggle:active { transform: scale(0.94); }
 
         #btnToggle::after {
-            content: '';
-            position: absolute;
+            content: ''; position: absolute;
             top: 50%; left: 50%;
-            width: 34px; height: 34px;
-            background: var(--fg);
-            border-radius: 50%;
+            width: 30px; height: 30px;
+            background: var(--fg); border-radius: 50%;
             transform: translate(-50%, -50%) scale(0);
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        #btnToggle.is-playing::after { 
-            transform: translate(-50%, -50%) scale(1);
-        }
+        #btnToggle.is-playing::after { transform: translate(-50%, -50%) scale(1); }
 
-        /* NAVIGATORE DI TRACCIA (SOSTITUISCE LA PLAYLIST) */
+        /* NAVIGATORE DI TRACCIA AMPIO */
         .track-navigator {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 13px;
+            display: flex; justify-content: space-between; align-items: center;
+            width: 100%; max-width: 240px; /* Si allinea visivamente all'onda */
+            margin-top: 4px;
         }
         
         #currentTrackDisplay {
-            color: var(--fg);
-            font-weight: bold;
-            min-width: 140px; /* Evita salti di layout se i nomi cambiano lunghezza */
-            text-align: center;
+            color: var(--fg); font-weight: bold; font-size: 13px; text-align: center;
         }
 
         .hidden { display: none !important; }
 
         /* OVERLAY MODALE PER SCANNER QR */
         #qrModal {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100dvh;
-            background: var(--bg);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 30px;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background: var(--bg); z-index: 1000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 30px;
+            /* Applichiamo la griglia anche alla modale */
+            background-image: radial-gradient(var(--grid) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
         
         .camera-viewport {
-            width: 80vw; height: 80vw;
-            max-width: 300px; max-height: 300px;
-            border: 1px solid var(--fg);
-            overflow: hidden;
-            position: relative;
-            background: #fafafa;
+            width: 75vw; height: 75vw; max-width: 280px; max-height: 280px;
+            border: 2px solid var(--fg); overflow: hidden; position: relative;
+            background: var(--fg);
         }
         
-        #qrReader video {
-            width: 100% !important; height: 100% !important;
-            object-fit: cover !important;
-        }
+        #qrReader video { width: 100% !important; height: 100% !important; object-fit: cover !important; }
     </style>
 </head>
 <body>
 
     <div id="desktop-block">
         <div class="info-block" style="align-items: center; gap: 15px; text-align: center;">
-            <span>system / gen_audio.no_scroll</span>
-            <span>[ error: access denied ]</span>
-            <span style="color: var(--faded); max-width: 280px; line-height: 1.4;">
-                this installation is designed for mobile interactions via camera scan.<br><br>
+            <span class="sys-label">SYSTEM / ERROR</span>
+            <span class="sys-value">[ access denied ]</span>
+            <span class="sys-value" style="color: var(--lead); max-width: 280px; line-height: 1.4;">
+                this hardware is designed for mobile optical reading.<br><br>
                 please open this url on an ios or android device.
             </span>
         </div>
     </div>
 
     <div id="qrModal" class="hidden">
-        <span style="color: var(--faded);">[ inquadra qr_code ]</span>
+        <span class="sys-label">OMR / SCANNER ACTIVE</span>
         <div class="camera-viewport">
             <div id="qrReader" style="width: 100%; height: 100%;"></div>
         </div>
@@ -234,15 +235,21 @@
         
         <header>
             <div class="info-block">
-                <span style="color: var(--faded);">cartridge</span>
-                <button id="btnScanQR" class="text-btn">[ qr_scan ]</button>
+                <span class="sys-label">
+                    <div id="statusLed" class="led led-red"></div>
+                    SYSTEM / OMR_v2.2
+                </span>
+                <span class="sys-label" style="margin-top: 8px;">CARTRIDGE_SLOT</span>
+                <button id="btnScanQR" class="text-btn" style="align-self: flex-start;">[ qr_scan ]</button>
             </div>
             
             <div class="info-block text-right">
-                <button id="btnAcid" class="status-btn">logic: acid [off]</button>
-                <button id="btnAutoBreak" class="status-btn">logic: break [off]</button>
-                <div class="vol-container" style="margin-top: 10px;">
-                    <span style="color: var(--faded);">vol</span>
+                <span class="sys-label">LOGIC_BOARD</span>
+                <button id="btnAcid" class="status-btn">acid [off]</button>
+                <button id="btnAutoBreak" class="status-btn">break [off]</button>
+                
+                <span class="sys-label" style="margin-top: 8px;">MASTER_OUT</span>
+                <div class="vol-container">
                     <input type="range" id="masterVol" min="0" max="1.5" step="0.01" value="0.8">
                 </div>
             </div>
@@ -255,19 +262,17 @@
 
         <footer>
             <div class="info-block">
-                <span style="color: var(--faded);">tracks_index</span>
-                
+                <span class="sys-label">TRACK_INDEX</span>
                 <div class="track-navigator">
-                    <button id="btnPrev" class="nav-btn">[ < ]</button>
-                    <span id="currentTrackDisplay">-- / awaiting data</span>
-                    <button id="btnNext" class="nav-btn">[ > ]</button>
+                    <button id="btnPrev" class="nav-btn">[ &lt; ]</button>
+                    <span id="currentTrackDisplay" class="sys-value">-- / empty</span>
+                    <button id="btnNext" class="nav-btn">[ &gt; ]</button>
                 </div>
-
             </div>
             
-            <div class="info-block text-right" style="color: var(--faded);">
-                <span>design: pure geometry</span>
-                <span>source: optical fetch</span>
+            <div class="info-block text-right">
+                <span class="sys-label">DESIGN_ARCH</span>
+                <span class="sys-value" style="color: var(--lead);">dot.grid array</span>
             </div>
         </footer>
 
@@ -275,10 +280,20 @@
 
     <script>
         // ==========================================
-        // 0. DEVICE DETECTION (MOBILE ONLY STRICT)
+        // 0. DEVICE DETECTION & UI STATE
         // ==========================================
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         if (!isMobile) document.body.classList.add('is-desktop');
+
+        const statusLed = document.getElementById('statusLed');
+        
+        function setLed(state) {
+            statusLed.className = 'led'; // Reset
+            if(state === 'empty') statusLed.classList.add('led-red');
+            if(state === 'reading') statusLed.classList.add('led-orange');
+            if(state === 'ready') statusLed.classList.add('led-green');
+            if(state === 'playing') { statusLed.classList.add('led-green'); statusLed.classList.add('led-pulse'); }
+        }
 
         // ==========================================
         // 1. LOGICA PLAYER E GESTIONE DATI
@@ -332,10 +347,11 @@
         }
 
         const currentTrackDisplay = document.getElementById('currentTrackDisplay');
+        const btnScanQR = document.getElementById('btnScanQR');
 
         function updateTrackDisplay() {
             if(tracklist.length === 0) {
-                currentTrackDisplay.innerText = "-- / awaiting data";
+                currentTrackDisplay.innerText = "-- / empty";
                 return;
             }
             const trackNum = String(currentTrackIndex + 1).padStart(2, '0');
@@ -352,7 +368,9 @@
             });
 
             if(tracklist.length === 0) { 
-                currentTrackDisplay.innerText = "err: invalid structure";
+                currentTrackDisplay.innerText = "err / invalid_data";
+                btnScanQR.innerText = "[ qr_scan ]";
+                setLed('empty');
                 return; 
             }
 
@@ -360,12 +378,13 @@
             initModulesStructure();
             updateTrackDisplay();
             loadTrackIntoEngine(currentTrackIndex); 
+            btnScanQR.innerText = "[ cartridge_ok ]";
+            setLed('ready');
         }
 
         // ==========================================
         // 2. ACQUISIZIONE QR
         // ==========================================
-        const btnScanQR = document.getElementById('btnScanQR');
         const qrModal = document.getElementById('qrModal');
         const btnCancelScan = document.getElementById('btnCancelScan');
         
@@ -374,6 +393,7 @@
         btnScanQR.addEventListener('click', () => {
             if (!isMobile) return; 
             qrModal.classList.remove('hidden');
+            setLed('reading');
             if(!html5QrCode) html5QrCode = new Html5Qrcode("qrReader");
             
             html5QrCode.start(
@@ -382,16 +402,20 @@
                 (qrCodeMessage) => {
                     qrModal.classList.add('hidden');
                     html5QrCode.stop();
-                    currentTrackDisplay.innerText = "fetching remote...";
+                    currentTrackDisplay.innerText = "fetching...";
                     
                     fetch(qrCodeMessage)
                         .then(res => { if(!res.ok) throw new Error(); return res.json(); })
                         .then(data => { processAndLoadDatabase(data); })
-                        .catch(() => { currentTrackDisplay.innerText = "err: fetch failed"; });
+                        .catch(() => { 
+                            currentTrackDisplay.innerText = "err / network_fail"; 
+                            setLed('empty');
+                        });
                 },
                 () => {}
             ).catch(() => {
-                currentTrackDisplay.innerText = "err: camera denied";
+                currentTrackDisplay.innerText = "err / camera_denied";
+                setLed('empty');
                 qrModal.classList.add('hidden');
             });
         });
@@ -399,6 +423,7 @@
         btnCancelScan.addEventListener('click', () => {
             qrModal.classList.add('hidden');
             if(html5QrCode) html5QrCode.stop();
+            setLed(tracklist.length > 0 ? 'ready' : 'empty');
         });
 
         // ==========================================
@@ -423,18 +448,25 @@
         btnToggle.addEventListener('click', function() {
             if (tracklist.length === 0) return;
             if (!isPlaying) {
-                isPlaying = true; this.classList.add('is-playing'); startAudioEngine(); 
+                isPlaying = true; 
+                this.classList.add('is-playing'); 
+                setLed('playing');
+                startAudioEngine(); 
             } else {
-                isPlaying = false; this.classList.remove('is-playing'); stopAudioEngine(); liveBreakActive = false; 
+                isPlaying = false; 
+                this.classList.remove('is-playing'); 
+                stopAudioEngine(); 
+                liveBreakActive = false; 
+                setLed('ready');
             }
         });
 
         document.getElementById('btnAcid').addEventListener('click', function() {
-            acidMode = !acidMode; this.innerText = acidMode ? 'logic: acid [on]' : 'logic: acid [off]'; this.classList.toggle('is-active', acidMode);
+            acidMode = !acidMode; this.innerText = acidMode ? 'acid [on]' : 'acid [off]'; this.classList.toggle('is-active', acidMode);
         });
 
         document.getElementById('btnAutoBreak').addEventListener('click', function() {
-            autoBreakMode = !autoBreakMode; this.innerText = autoBreakMode ? 'logic: break [on]' : 'logic: break [off]'; this.classList.toggle('is-active', autoBreakMode);
+            autoBreakMode = !autoBreakMode; this.innerText = autoBreakMode ? 'break [on]' : 'break [off]'; this.classList.toggle('is-active', autoBreakMode);
         });
 
         document.getElementById('masterVol').addEventListener('input', (e) => {
@@ -488,7 +520,7 @@
         function initAudioEngine() {
             if (ctx) return; ctx = new AudioContext();
             masterCompressor = ctx.createDynamicsCompressor(); masterCompressor.threshold.value = -3.0; masterCompressor.knee.value = 12.0; masterCompressor.ratio.value = 15.0; masterCompressor.attack.value = 0.002; masterCompressor.release.value = 0.1;
-            analyser = ctx.createAnalyser(); analyser.fftSize = 512; bufferLength = analyser.frequencyBinCount; dataArray = new Uint8Array(bufferLength);
+            analyser = ctx.createAnalyser(); analyser.fftSize = 512; bufferLength = analyser.frequencyBinCount; dataArray = new Uint8Array(bufferLength); /* Ottimizzazione CPU */
             masterGain = ctx.createGain(); masterGain.gain.value = parseFloat(document.getElementById('masterVol').value) || 0.8; 
             masterGain.connect(masterCompressor); masterCompressor.connect(analyser); analyser.connect(ctx.destination);
             initVisualizer(); 
@@ -538,7 +570,7 @@
         function stopAudioEngine() { clearTimeout(timerID); }
 
         function scheduler() {
-            while (nextNoteTime < ctx.currentTime + 0.25) {
+            while (nextNoteTime < ctx.currentTime + 0.25) { /* BUFFER MAGGIORATO PER STABILITA' */
                 const stepToPlay = currentStep; const timeToPlay = nextNoteTime;
                 if (autoBreakMode && !liveBreakActive) {
                     const posInBar = stepToPlay % 16; const isMacroPage = (stepToPlay === 48); 
